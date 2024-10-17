@@ -1,6 +1,7 @@
 import {
   HookEvent,
   isRunGroupSuccessful,
+  isRunGroupFailed,
   Run,
   RunGroupProgress,
   TeamsHook,
@@ -19,8 +20,8 @@ interface TeamsReporterEventPayload {
 }
 
 export async function reportToTeams(
-  hook: TeamsHook,
-  event: TeamsReporterEventPayload
+    hook: TeamsHook,
+    event: TeamsReporterEventPayload
 ) {
   if (!shouldReportTeamsHook(event.eventType, hook)) {
     return;
@@ -34,8 +35,8 @@ export async function reportToTeams(
 
   let title = '';
   let color = isRunGroupSuccessful(event.groupProgress)
-    ? successColor
-    : failureColor;
+      ? successColor
+      : failureColor;
 
   switch (event.eventType) {
     case HookEvent.RUN_START:
@@ -49,8 +50,13 @@ export async function reportToTeams(
       break;
     case HookEvent.RUN_FINISH:
       title = `${
-        isRunGroupSuccessful(event.groupProgress) ? '&#x2705;' : '&#x274C;'
+          isRunGroupSuccessful(event.groupProgress) ? '&#x2705;' : '&#x274C;'
       } *Run finished* (${ciBuildId}${groupLabel})`;
+      break;
+    case HookEvent.RUN_FAILED:
+      title = `${
+          isRunGroupFailed(event.groupProgress) ? '&#x2705;' : '&#x274C;'
+      } *Run failed* (${ciBuildId}${groupLabel})`;
       break;
     case HookEvent.RUN_TIMEOUT:
       title = `:hourglass_flowing_sand: *Run timedout* (${ciBuildId})`;
@@ -68,13 +74,13 @@ export async function reportToTeams(
   } = event.groupProgress.tests;
 
   const commitDescription =
-    (event.run.meta.commit?.branch || event.run.meta.commit?.message) &&
-    `*Branch:*\n${event.run.meta.commit.branch}\n\n*Commit:*\n${truncate(
-      event.run.meta.commit.message,
-      {
-        length: 100,
-      }
-    )}`;
+      (event.run.meta.commit?.branch || event.run.meta.commit?.message) &&
+      `*Branch:*\n${event.run.meta.commit.branch}\n\n*Commit:*\n${truncate(
+          event.run.meta.commit.message,
+          {
+            length: 100,
+          }
+      )}`;
 
   axios({
     method: 'post',
@@ -101,7 +107,7 @@ export async function reportToTeams(
                       {
                         type: 'Image',
                         url:
-                          'https://gblobscdn.gitbook.com/spaces%2F-MS6gDAYECuzpKjjzrdc%2Favatar-1611996755562.png?alt=media',
+                            'https://gblobscdn.gitbook.com/spaces%2F-MS6gDAYECuzpKjjzrdc%2Favatar-1611996755562.png?alt=media',
                         altText: 'Sorry-Cypress',
                         size: 'Large',
                         style: 'Person',
@@ -176,8 +182,8 @@ export async function reportToTeams(
     },
   }).catch((error) => {
     getLogger().error(
-      { error, ...hook },
-      `Error while posting MSTeams message to ${hook.url}`
+        { error, ...hook },
+        `Error while posting MSTeams message to ${hook.url}`
     );
   });
 }

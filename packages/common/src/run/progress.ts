@@ -39,6 +39,9 @@ export const isRunCompleted = (progress: { groups: Group[] }) =>
 export const isRunGroupSuccessful = (group: RunGroupProgress) =>
   group.tests.failures === 0 && group.tests.skipped === 0;
 
+export const isRunGroupFailed = (group: RunGroupProgress) =>
+    group.tests.failures >= 1;
+
 export const getRunDurationSeconds = (
   createdAt: Date,
   updatedAt: Date | null,
